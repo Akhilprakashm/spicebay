@@ -1,0 +1,54 @@
+services:
+
+  backend:
+    build:
+      context: .
+      dockerfile: app/backend/Dockerfile
+    container_name: spicebay-backend
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=development
+      - DATABASE_URL=postgresql://spicebay:spicebay123@db:5432/spicebaydb
+      - REDIS_URL=redis://cache:6379/0
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_started
+    networks:
+      - spicebay-network
+
+  db:
+    image: postgres:16-alpine
+    container_name: spicebay-db
+    environment:
+      - POSTGRES_USER=spicebay
+      - POSTGRES_PASSWORD=spicebay123
+      - POSTGRES_DB=spicebaydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U spicebay -d spicebaydb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - spicebay-network
+
+  cache:
+    image: redis:7-alpine
+    container_name: spicebay-cache
+    ports:
+      - "6379:6379"
+    networks:
+      - spicebay-network
+
+volumes:
+  postgres_data:
+
+networks:
+  spicebay-network:
+    driver: bridge
