@@ -19,6 +19,18 @@ services:
     networks:
       - spicebay-network
 
+  frontend:
+    build:
+      context: ./app/frontend
+      dockerfile: Dockerfile
+    container_name: spicebay-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - spicebay-network
+
   db:
     image: postgres:16-alpine
     container_name: spicebay-db
